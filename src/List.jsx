@@ -1,32 +1,48 @@
 import React, { useEffect, useState } from 'react'
 import Loader from './Loader'
+import { parseListCurrency } from './utils'
 
 const List = () => {
-    const [content, setContent] = useState(<Loader />)
+    const [isLoading, setIsLoading] = useState(false)
+    const [data, setData] = useState(null)
 
     useEffect(() => {
-        const promise = new Promise((resolve, reject) => {
-            setTimeout(() => {
-                resolve(require("./data.json"))
-            }, 2000)
-        })
+        async function getData() {
+                setIsLoading(true)
+                const promise = new Promise((resolve, reject) => {
+                    setTimeout(() => {
+                        resolve(require("./data.json"))
+                    }, 2000)
+                })
+        
+                try {
+                    const responce = await promise
+                    setData(responce)
+                } finally {
+                    setIsLoading(false)
+                }
+        }
 
-        promise.then(responce => {
-            const dataList = Object.keys(responce).map(key => {
-                return typeof responce[key] === 'object' ?
-                    [ 
-                        <li key = { key }>{ `${ key }:` }</li>,
-                        <ul>{ Object.keys(responce[key]).map(key2 => 
-                            <li key = { key2 }>{ `   ${ key2 }: ${ responce[key][key2] }` }</li>
-                        ) }</ul> 
-                    ] :
-                    <li key = { key }>{ `${ key }: ${ responce[key] }` }</li>
-            })
-            setContent(<ul className = "list">{ dataList }</ul>)
-        })
-    }, [])
+        if (!data)
+            getData()   
+    }, [data])
 
-    return content
+    const currency = data?.base
+    const list = React.useMemo(() => parseListCurrency(data), [data])
+
+    const renderRow = ({ cur, rate }) =>
+        <div key = { cur } className = "currency">
+            <div>{ cur }</div>
+            <div>{ rate }</div>
+        </div>
+
+    const renderList = () => 
+        <div className = "wrapper">
+            <h1>{ `Currency: ${ currency }` }</h1>
+            { list.map(row => renderRow(row)) }
+        </div>
+
+    return isLoading ? <Loader /> : renderList()
 }
 
 export default List
