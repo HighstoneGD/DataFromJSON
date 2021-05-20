@@ -9,7 +9,7 @@ const List = () => {
     useEffect(() => {
         async function getData() {
                 setIsLoading(true)
-                const promise = new Promise((resolve, reject) => {
+                const promise = new Promise((resolve) => {
                     setTimeout(() => {
                         resolve(require("./data.json"))
                     }, 2000)
